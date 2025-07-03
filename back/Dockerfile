@@ -41,4 +41,4 @@ COPY . .
 EXPOSE 5009
 
 # Run the application.
-CMD node src/index.js
+CMD node index.js
