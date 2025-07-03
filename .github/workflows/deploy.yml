@@ -48,7 +48,7 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
-          REACT_APP_BACKEND_URL=http://208.109.228.76:8016
+          REACT_APP_BACKEND_URL=${{ secrets.REACT_APP_BACKEND_URL }}
           NODE_ENV=production
 
   deploy:
