@@ -35,6 +35,8 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/marvin-backend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
