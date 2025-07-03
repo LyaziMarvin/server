@@ -1,0 +1,93 @@
+.flux-container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+.flux-header {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    #d4f1f9 0%,
+    #f1f8fc 50%,
+    #ffffff 100%
+  );
+  padding: 40px;
+}
+
+.flux-image-wrapper {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #0077cc;
+  background: #fff;
+  margin-right: 30px;
+}
+
+.flux-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.flux-header-content {
+  text-align: left;
+  color: #333;
+}
+
+.flux-title {
+  font-size: 28px;
+  margin: 0 0 10px 0;
+}
+
+.flux-creator,
+.flux-category,
+.flux-description {
+  margin: 6px 0;
+  color: #555;
+}
+
+.flux-divider {
+  height: 1px;
+  background: #ddd;
+  margin: 20px 0;
+}
+
+.flux-signup {
+  text-align: left;
+  padding: 30px 40px;
+}
+
+.flux-signup h3 {
+  margin-bottom: 10px;
+}
+
+.flux-signup p {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.flux-signup-btn {
+  padding: 12px 30px;
+  background-color: #ff7043;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.flux-signup-btn:hover {
+  background-color: #ff5722;
+}
+
+
+
+

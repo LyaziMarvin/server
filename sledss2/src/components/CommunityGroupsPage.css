@@ -1,0 +1,117 @@
+.community-container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+.community-header {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    #e0f7fa 0%,
+    #f1f8e9 50%,
+    #ffffff 100%
+  );
+  padding: 40px;
+}
+
+.community-image-wrapper {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #26a69a;
+  background: #fff;
+  margin-right: 30px;
+}
+
+.community-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.community-header-content {
+  text-align: left;
+  color: #333;
+}
+
+.community-title {
+  font-size: 28px;
+  margin: 0 0 10px 0;
+}
+
+.community-creator,
+.community-language,
+.community-description {
+  margin: 6px 0;
+  color: #555;
+}
+
+.community-divider {
+  height: 1px;
+  background: #ddd;
+  margin: 20px 0;
+}
+
+.community-groups {
+  text-align: left;
+  padding: 30px 40px;
+}
+
+.community-groups h3 {
+  margin-bottom: 20px;
+}
+
+.group-card {
+  background: #f9fbe7;
+  border-left: 5px solid #8bc34a;
+  padding: 20px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+}
+
+.group-card h4 {
+  margin: 0 0 8px 0;
+}
+
+.group-card p {
+  margin: 0;
+  color: #666;
+}
+
+.community-signup {
+  text-align: left;
+  padding: 30px 40px;
+  background: #f1f8e9;
+  border-top: 1px solid #c5e1a5;
+}
+
+.community-signup h3 {
+  margin-bottom: 10px;
+}
+
+.community-signup p {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.community-signup-btn {
+  padding: 12px 30px;
+  background-color: #26a69a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.community-signup-btn:hover {
+  background-color: #00897b;
+}
