@@ -31,7 +31,7 @@ function AgentCommunizedPage() {
     };
 
     try {
-      const response = await fetch(`  ${config.backendUrl}/api/register`, {
+      const response = await fetch(`${config.backendUrl}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
