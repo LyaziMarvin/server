@@ -16,9 +16,12 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-      # Step 5: Create .env file in the root directory
+      # Step 5: Create .env file in the backend directory
     - name: Add environment file for deployment 
-      run: echo "${{ secrets.ENV_FILE_CONTENTS }}" > ./backend/.env
+      run: |
+        echo "# Environment variables for backend deployment" > ./back/.env
+        echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> ./back/.env
+        echo "NODE_ENV=production" >> ./back/.env
 
     - name: Login to Docker Hub
       uses: docker/login-action@v3
@@ -29,8 +32,8 @@ jobs:
     - name: Build and push backend image
       uses: docker/build-push-action@v5
       with:
-        context: ./backend
-        file: ./backend/Dockerfile
+        context: ./back
+        file: ./back/Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/marvin-backend:latest
         cache-from: type=gha
@@ -41,8 +44,8 @@ jobs:
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
       with:
-        context: ./frontend
-        file: ./frontend/Dockerfile
+        context: ./sledss2
+        file: ./sledss2/Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/marvin-frontend:latest
         cache-from: type=gha
@@ -70,8 +73,12 @@ jobs:
           mkdir -p /home/${{ secrets.USERNAME }}/marvin-app
           cd /home/${{ secrets.USERNAME }}/marvin-app
           
-          # Create .env file from single GitHub secret
-          echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
+          # Create .env file from individual GitHub secrets
+          echo "# Environment variables for marvin app deployment" > .env
+          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
+          echo "NODE_ENV=production" >> .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "REACT_APP_BACKEND_URL=${{ secrets.REACT_APP_BACKEND_URL }}" >> .env
 
     - name: Copy docker-compose file to server
       uses: appleboy/scp-action@v0.1.7
