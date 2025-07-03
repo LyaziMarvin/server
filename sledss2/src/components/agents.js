@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import config from "./config";
 
 const CloneAgentInterface = () => {
   const [step, setStep] = useState("describeFeelings");
@@ -63,7 +64,7 @@ const CloneAgentInterface = () => {
     formData.append("audio", blob, "voice.webm");
 
     try {
-      const res = await axios.post("http://localhost:5009/api/transcribe", formData);
+      const res = await axios.post(`${config.backendUrl}/api/transcribe`, formData);
       const transcript = res.data.text.trim();
 
       if (step === "describeFeelings") {
@@ -81,7 +82,7 @@ const CloneAgentInterface = () => {
   };
 
   const handleGenerateStory = async () => {
-    const res = await axios.post("http://localhost:5009/api/generate-story", {
+    const res = await axios.post(`${config.backendUrl}/api/generate-story`, {
       message: `${feelingsText} ${memoryText}`,
       userID,
     });
@@ -90,7 +91,7 @@ const CloneAgentInterface = () => {
 
   const handleSpeakStory = async () => {
     const res = await axios.post(
-      "http://localhost:5009/api/speak-story",
+      `${config.backendUrl}/api/speak-story`,
       { story, userID },
       { responseType: "blob" }
     );
@@ -100,7 +101,7 @@ const CloneAgentInterface = () => {
 
   const handleGenerateImage = async () => {
     try {
-      const res = await axios.post("http://localhost:5009/api/generate-image", {
+      const res = await axios.post(`${config.backendUrl}/api/generate-image`, {
         memory: memoryText,
         userID,
       });
@@ -114,7 +115,7 @@ const CloneAgentInterface = () => {
     if (!userID || !feelingsText) return;
 
     try {
-      const res = await axios.post("http://localhost:5009/api/generate-playlist", {
+      const res = await axios.post(`${config.backendUrl}/api/generate-playlist`, {
         message: `${feelingsText}`,
         userID,
       });
@@ -128,8 +129,8 @@ const CloneAgentInterface = () => {
     step === "describeFeelings"
       ? "🎤 Please describe how you're feeling today..."
       : step === "describeMemory"
-      ? "📖 Please share a memory that comes to mind..."
-      : "✅ All inputs captured. Ready to generate!";
+        ? "📖 Please share a memory that comes to mind..."
+        : "✅ All inputs captured. Ready to generate!";
 
   return (
     <div style={containerStyle}>
