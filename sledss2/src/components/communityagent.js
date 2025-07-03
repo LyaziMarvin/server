@@ -86,7 +86,7 @@ function CommunityAgent() {
   const sendToOpenAI = async (mode) => {
     setWaiting(true);
     try {
-      const res = await fetch(` ${config.backendUrl}5009/api/openai`, {
+      const res = await fetch(`${config.backendUrl}/api/openai`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userID, mode })
