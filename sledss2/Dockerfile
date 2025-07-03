@@ -1,9 +1,8 @@
-# Frontend Dockerfile for Next.js application
+# Frontend Dockerfile for React application
 FROM node:18-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -17,53 +16,29 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED=1
-
-#inject arg for next public url
+# Build arguments for React app
 ARG REACT_APP_BACKEND_URL
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 
 ARG NODE_ENV
 ENV NODE_ENV=$NODE_ENV
 
-
-# Build the application
+# Build the React application
 RUN npm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
+# Production image, serve with nginx
+FROM nginx:alpine AS runner
 
-ENV NODE_ENV=production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-ENV NEXT_TELEMETRY_DISABLED=1
+# Copy built React app to nginx
+COPY --from=builder /app/build /usr/share/nginx/html
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Copy nginx configuration if needed
+# COPY nginx.conf /etc/nginx/nginx.conf
 
-COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
+# Expose port
 EXPOSE 3005
 
-ENV PORT=3005
-# set hostname to localhost
-ENV HOSTNAME="0.0.0.0"
+# Configure nginx to listen on port 3005
+RUN sed -i 's/listen       80;/listen       3005;/' /etc/nginx/conf.d/default.conf
 
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
-# CMD ["node", "server.js"]
-CMD ["npm", "start"]
+CMD ["nginx", "-g", "daemon off;"]

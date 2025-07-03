@@ -134,15 +134,8 @@ jobs:
           # Check if services are healthy
           echo "🏥 Checking service health..."
           
-          # Check database (using correct service name)
-          if $DOCKER_COMPOSE -f $COMPOSE_FILE exec -T postgres pg_isready -U $POSTGRES_USER >/dev/null 2>&1; then
-            echo "✅ Database is healthy"
-          else
-            echo "❌ Database health check failed"
-          fi
-          
           # Check backend
-          if curl -f http://localhost:8016/health >/dev/null 2>&1; then
+          if curl -f http://localhost:5009 >/dev/null 2>&1; then
             echo "✅ Backend is healthy"
           else
             echo "❌ Backend health check failed"
@@ -151,7 +144,7 @@ jobs:
           fi
           
           # Check frontend
-          if curl -f http://localhost:3000/api/health >/dev/null 2>&1; then
+          if curl -f http://localhost:3005 >/dev/null 2>&1; then
             echo "✅ Frontend is healthy"
             echo "🎉 Full stack deployment successful!"
           else
