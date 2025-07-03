@@ -1,0 +1,170 @@
+name: Deploy Full Stack Application
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+      # Step 5: Create .env file in the root directory
+    - name: Add environment file for deployment 
+      run: echo "${{ secrets.ENV_FILE_CONTENTS }}" > ./backend/.env
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/marvin-backend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/marvin-frontend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          REACT_APP_BACKEND_URL=http://208.109.228.76:8016
+          NODE_ENV=production
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create environment file and setup
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        script: |
+          # Create project directory
+          mkdir -p /home/${{ secrets.USERNAME }}/marvin-app
+          cd /home/${{ secrets.USERNAME }}/marvin-app
+          
+          # Create .env file from single GitHub secret
+          echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
+
+    - name: Copy docker-compose file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        source: "docker-compose.fullstack.yml"
+        target: "/home/${{ secrets.USERNAME }}/marvin-app/"
+
+    - name: Deploy application
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}        
+        script: |
+          cd /home/${{ secrets.USERNAME }}/marvin-app
+
+          # Load environment variables from .env
+          set -a
+          source .env
+          set +a
+
+          # Check if docker compose is available
+          if command -v docker-compose >/dev/null 2>&1; then
+            DOCKER_COMPOSE="docker-compose"
+          elif docker compose version >/dev/null 2>&1; then
+            DOCKER_COMPOSE="docker compose"
+          else
+            echo "❌ Docker Compose not found"
+            exit 1
+          fi
+          
+          COMPOSE_FILE="docker-compose.fullstack.yml"
+
+          # Stop existing containers
+          echo "🛑 Stopping existing containers..."
+          $DOCKER_COMPOSE -f $COMPOSE_FILE down
+          
+          # Pull latest images
+          echo "📥 Pulling latest images..."
+          $DOCKER_COMPOSE -f $COMPOSE_FILE pull || echo "Some images may need to be built locally"
+          
+          # Start all services
+          echo "🚀 Starting full stack application..."
+          $DOCKER_COMPOSE -f $COMPOSE_FILE up -d
+          
+          # Wait for services to start
+          echo "⏳ Waiting for services to start..."
+          sleep 60
+          
+          # Check if services are healthy
+          echo "🏥 Checking service health..."
+          
+          # Check database (using correct service name)
+          if $DOCKER_COMPOSE -f $COMPOSE_FILE exec -T postgres pg_isready -U $POSTGRES_USER >/dev/null 2>&1; then
+            echo "✅ Database is healthy"
+          else
+            echo "❌ Database health check failed"
+          fi
+          
+          # Check backend
+          if curl -f http://localhost:8016/health >/dev/null 2>&1; then
+            echo "✅ Backend is healthy"
+          else
+            echo "❌ Backend health check failed"
+            echo "📋 Backend logs:"
+            $DOCKER_COMPOSE -f $COMPOSE_FILE logs --tail=50 backend
+          fi
+          
+          # Check frontend
+          if curl -f http://localhost:3000/api/health >/dev/null 2>&1; then
+            echo "✅ Frontend is healthy"
+            echo "🎉 Full stack deployment successful!"
+          else
+            echo "❌ Frontend health check failed"
+            echo "📋 Frontend logs:"
+            $DOCKER_COMPOSE -f $COMPOSE_FILE logs --tail=50 frontend
+          fi
+          
+          # Show running containers
+          echo "📊 Running containers:"
+          docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+    - name: Clean up old Docker images
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        script: |
+          # Remove old unused images
+          docker image prune -f
+          
+          # Keep last 3 versions of each service
+          docker images ${{ secrets.DOCKER_USERNAME }}/marvin-backend --format "table {{.Tag}}\t{{.ID}}" | tail -n +4 | awk '{print $2}' | head -n -3 | xargs -r docker rmi || true
+          docker images ${{ secrets.DOCKER_USERNAME }}/marvin-frontend --format "table {{.Tag}}\t{{.ID}}" | tail -n +4 | awk '{print $2}' | head -n -3 | xargs -r docker rmi || true
