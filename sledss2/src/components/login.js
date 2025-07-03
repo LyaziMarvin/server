@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import config from './config';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -9,20 +10,20 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5009/login', { email });
+      const response = await axios.post(`${config.backendUrl}/api/login`, { email });
       localStorage.setItem('token', response.data.token); // Store JWT token
       localStorage.setItem('userID', response.data.userID); // Store userID for score tracking
       alert('Login successful');
       navigate('/agents'); // Redirect to score submission page
-    }catch (error) {
-  console.error('Login failed:', error);
+    } catch (error) {
+      console.error('Login failed:', error);
 
-  if (error.response) {
-    alert(error.response.data.error); // show backend error
-  } else {
-    alert('Login failed due to network or server error');
-  }
-}
+      if (error.response) {
+        alert(error.response.data.error); // show backend error
+      } else {
+        alert('Login failed due to network or server error');
+      }
+    }
 
   };
 
