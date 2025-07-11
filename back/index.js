@@ -3,8 +3,10 @@ const cors = require('cors');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const neo4j = require('neo4j-driver');
+const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');  // <-- import uuid v4
 const OpenAI = require('openai');
+const { Readable } = require('stream');
 let clients = [];
 
 const SECRET_KEY = '1234';
@@ -17,6 +19,11 @@ app.use(express.json());
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+
+const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5NTVhNTc5Zi0xYjA3LTQyMDQtYWM1OS0xMmFjM2YyOTRlMzAiLCJpYXQiOjE3NTE3OTc5MjksImV4cCI6MTc1Njk4MTkyOX0.mfipI1D0B2m5Drbw5eiJ2Hqfzx9qomQxhaXzflop-HU"; // Truncated for security
+const FAMILY_API = "http://f7c37c494f5816817.temporary.link:5002/api/aggregate";
+
 
 const driver = neo4j.driver(
   'neo4j://184.168.29.119:7687',
@@ -546,6 +553,92 @@ Use warm and clear English. Present the groups as a numbered list.`;
     await session.close();
   }
 });
+
+// === Generate Family Story ===
+app.post("/api/family-historian", async (req, res) => {
+  try {
+    const apiRes = await axios.get(FAMILY_API, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    });
+
+    const { user, familyCircles } = apiRes.data;
+    const members = familyCircles?.[0]?.members || [];
+
+    console.log("=== FAMILY CIRCLE API RESPONSE ===");
+    console.log(JSON.stringify(apiRes.data, null, 2));
+
+    // Format data for prompt
+    const owner = `
+Full Name: ${user.firstname} ${user.lastname}
+Gender: ${user.gender}
+Birthday: ${user.birthday}
+Location: ${user.location}
+Email: ${user.email}
+Phone Number: ${user.phoneNumber}
+`;
+
+    const memberDetails = members.map((m, i) =>
+      `${i + 1}. ${m.firstname} ${m.lastname} — Relationship: ${m.relationship}, Email: ${m.email}`
+    ).join("\n");
+
+    const prompt = `
+You are a factual and empathetic family historian. Based only on the data below, write a short, warm, narrative-style family history. 
+Do not add any information that is not included. No fictional names, events, or locations. Stay strictly within the data.
+
+=== FAMILY CIRCLE OWNER ===
+${owner}
+
+=== FAMILY MEMBERS ===
+${memberDetails}
+
+Use the tone of a historian reflecting warmly on the real family of ${user.firstname} ${user.lastname}, while only referencing the provided people and details.
+`;
+
+    const aiRes = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful family historian AI. Do not hallucinate. Use only the data given.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.5,
+    });
+
+    const story = aiRes.choices?.[0]?.message?.content || "No story generated.";
+    res.json({ story });
+
+  } catch (error) {
+    console.error("❌ Error generating family story:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// === Narrate Family Story ===
+app.post("/api/family-narration", async (req, res) => {
+  const { story } = req.body;
+  if (!story) return res.status(400).json({ error: "Story is required" });
+
+  try {
+    const speechRes = await openai.audio.speech.create({
+      model: "tts-1",
+      voice: "nova",
+      input: story,
+    });
+
+    const buffer = Buffer.from(await speechRes.arrayBuffer());
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Content-Disposition", "inline; filename=story.mp3");
+    Readable.from(buffer).pipe(res);
+  } catch (err) {
+    console.error("❌ Narration error:", err.message);
+    res.status(500).json({ error: "Narration generation failed" });
+  }
+});
+
+
 
 
 // 🚀 Start server on port 5009

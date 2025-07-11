@@ -13,6 +13,8 @@ import SuperAgentPage from "./components/super";
 import CommunityGroupsPage from "./components/community";
 import CommunityAgent from "./components/communityagent";
 import AgentCommunizedPage from "./components/communized";
+import FamilyTreeGenerator from "./components/familytree";
+import FamilyNode from "./components/FamilyNode";
 
 
 
@@ -104,7 +106,7 @@ const App = () => {
             )}
           </div>
    
-<Link style={linkStyle} to=""></Link>
+<Link style={linkStyle} to="familytree"></Link>
          
         </div>
       </div>
@@ -123,6 +125,8 @@ const App = () => {
                     <Route path="/community" element={<CommunityGroupsPage/>} />
                        <Route path="/communityagent" element={<CommunityAgent/>} />
                         <Route path="/communized" element={<AgentCommunizedPage/>} />
+                         <Route path="/familytree" element={<FamilyTreeGenerator/>} />
+                         <Route path="/FAMILYNODE" element={<FamilyNode/>} />
                        
                 
                 

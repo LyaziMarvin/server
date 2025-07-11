@@ -9,14 +9,21 @@ function CareAgentSection() {
     {
       name: "Marvin",
       jobDescription: "LifeStyle Choices",
-      image: "/adobe.png", // Replace with actual Marvin image path
+      image: "/adobe.png", 
       route: "/flux"
     },
     {
       name: "Carol",
       jobDescription: "Community Groups",
-      image: "/adobe4.jpeg", // Replace with actual Carol image path
+      image: "/adobe4.jpeg", 
       route: "/community"
+    }
+    ,
+    {
+      name: "Job",
+      jobDescription: "Family History",
+      image: "/adobe7.jpeg", 
+      route: "/familytree"
     }
   ];
 
